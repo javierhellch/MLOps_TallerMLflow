@@ -1,5 +1,3 @@
-version: "3.9"
-
 networks:
   mlops-net:
     driver: bridge
@@ -27,7 +25,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./db-init:/docker-entrypoint-initdb.d   # scripts de inicialización
+      - ./db-init:/docker-entrypoint-initdb.d
     networks:
       - mlops-net
     healthcheck:
@@ -48,8 +46,8 @@ services:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin123
     ports:
-      - "9000:9000"   # API S3
-      - "9001:9001"   # UI web
+      - "9000:9000"
+      - "9001:9001"
     volumes:
       - minio_data:/data
     networks:
@@ -81,7 +79,9 @@ services:
   # 3. MLflow  (tracking + model registry)
   # ─────────────────────────────────────────────
   mlflow:
-    image: python:3.11-slim
+    build:
+      context: ./mlflow
+      dockerfile: Dockerfile
     container_name: mlops-mlflow
     restart: unless-stopped
     depends_on:
@@ -99,22 +99,12 @@ services:
       - mlops-net
     volumes:
       - mlflow_data:/mlflow
-    command: >
-      bash -c "
-        pip install --quiet mlflow psycopg2-binary boto3 &&
-        mlflow server
-          --backend-store-uri postgresql://mlops:mlops_secret@postgres:5432/mlops_db
-          --default-artifact-root s3://mlflows3/artifacts
-          --host 0.0.0.0
-          --port 5001
-          --serve-artifacts
-      "
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5001/"]
       interval: 15s
       timeout: 10s
-      retries: 8
-      start_period: 60s
+      retries: 10
+      start_period: 30s
 
   # ─────────────────────────────────────────────
   # 4. JupyterLab  (experimentación)
@@ -149,14 +139,6 @@ services:
       - jupyter_work:/work/shared
     networks:
       - mlops-net
-    command: >
-      jupyter lab
-        --ip=0.0.0.0
-        --port=8888
-        --no-browser
-        --notebook-dir=/work
-        --NotebookApp.token=''
-        --NotebookApp.password=''
 
   # ─────────────────────────────────────────────
   # 5. FastAPI  (servicio de inferencia)

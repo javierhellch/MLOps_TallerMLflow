@@ -2,17 +2,23 @@ FROM python:3.11-slim
 
 LABEL maintainer="MLOps Penguins"
 
-# Dependencias del sistema
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl git build-essential && \
     rm -rf /var/lib/apt/lists/*
 
-# Directorio de trabajo
 WORKDIR /work
 
-# Instalar dependencias Python
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Puerto JupyterLab
 EXPOSE 8888
+
+# --allow-root requerido porque el contenedor corre como root
+CMD ["jupyter", "lab", \
+     "--ip=0.0.0.0", \
+     "--port=8888", \
+     "--no-browser", \
+     "--allow-root", \
+     "--notebook-dir=/work", \
+     "--IdentityProvider.token=", \
+     "--ServerApp.password="]
