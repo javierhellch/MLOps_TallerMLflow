@@ -1,0 +1,193 @@
+version: "3.9"
+
+# ============================================================
+#  MLOps Penguins — docker-compose.yml
+#  Servicios: PostgreSQL · MinIO · MLflow · JupyterLab · API
+# ============================================================
+
+networks:
+  mlops-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  minio_data:
+  mlflow_data:
+  jupyter_work:
+
+services:
+
+  # ─────────────────────────────────────────────
+  # 1. PostgreSQL  (metadata MLflow + datos)
+  # ─────────────────────────────────────────────
+  postgres:
+    image: postgres:15
+    container_name: mlops-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mlops
+      POSTGRES_PASSWORD: mlops_secret
+      POSTGRES_DB: mlops_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db-init:/docker-entrypoint-initdb.d   # scripts de inicialización
+    networks:
+      - mlops-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mlops -d mlops_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────────────
+  # 2. MinIO  (almacén de artefactos S3-compatible)
+  # ─────────────────────────────────────────────
+  minio:
+    image: minio/minio:latest
+    container_name: mlops-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    ports:
+      - "9000:9000"   # API S3
+      - "9001:9001"   # UI web
+    volumes:
+      - minio_data:/data
+    networks:
+      - mlops-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Crea el bucket automáticamente al levantar
+  minio-init:
+    image: minio/mc:latest
+    container_name: mlops-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set myminio http://minio:9000 minioadmin minioadmin123;
+      mc mb --ignore-existing myminio/mlflows3;
+      mc anonymous set public myminio/mlflows3;
+      echo 'Bucket mlflows3 listo.';
+      "
+    networks:
+      - mlops-net
+
+  # ─────────────────────────────────────────────
+  # 3. MLflow  (tracking + model registry)
+  # ─────────────────────────────────────────────
+  mlflow:
+    image: python:3.11-slim
+    container_name: mlops-mlflow
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    environment:
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadmin123
+    ports:
+      - "5000:5000"
+    networks:
+      - mlops-net
+    volumes:
+      - mlflow_data:/mlflow
+    command: >
+      bash -c "
+        pip install --quiet mlflow psycopg2-binary boto3 &&
+        mlflow server
+          --backend-store-uri postgresql://mlops:mlops_secret@postgres:5432/mlops_db
+          --default-artifact-root s3://mlflows3/artifacts
+          --host 0.0.0.0
+          --port 5000
+          --serve-artifacts
+      "
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 8
+      start_period: 60s
+
+  # ─────────────────────────────────────────────
+  # 4. JupyterLab  (experimentación)
+  # ─────────────────────────────────────────────
+  jupyter:
+    build:
+      context: ./jupyter
+      dockerfile: Dockerfile
+    container_name: mlops-jupyter
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mlflow:
+        condition: service_healthy
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadmin123
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: mlops_db
+      DB_USER: mlops
+      DB_PASSWORD: mlops_secret
+      TZ: America/Bogota
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./jupyter/notebooks:/work/notebooks
+      - ./jupyter/data:/work/data
+      - jupyter_work:/work/shared
+    networks:
+      - mlops-net
+    command: >
+      jupyter lab
+        --ip=0.0.0.0
+        --port=8888
+        --no-browser
+        --notebook-dir=/work
+        --NotebookApp.token=''
+        --NotebookApp.password=''
+
+  # ─────────────────────────────────────────────
+  # 5. FastAPI  (servicio de inferencia)
+  # ─────────────────────────────────────────────
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: mlops-api
+    restart: unless-stopped
+    depends_on:
+      mlflow:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadmin123
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: mlops_db
+      DB_USER: mlops
+      DB_PASSWORD: mlops_secret
+    ports:
+      - "8000:8000"
+    networks:
+      - mlops-net
