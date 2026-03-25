@@ -12,7 +12,7 @@ basada en servicios independientes comunicados por red.
                            Internet / Docker Network
   ┌──────────────┐    ┌──────────────────┐    ┌──────────────┐    ┌──────────────┐
   │  JupyterLab  │◄──►│     MLflow       │◄──►│    MinIO     │    │   FastAPI    │
-  │  :8888       │    │  :5000           │    │  :9000/:9001 │    │   :8000      │
+  │  :8888       │    │  :5001           │    │  :9000/:9001 │    │   :8000      │
   └──────────────┘    └──────────────────┘    └──────────────┘    └──────────────┘
          │                    │                       │                   │
          └────────────────────┴───────────────────────┴───────────────────┘
@@ -48,7 +48,7 @@ basada en servicios independientes comunicados por red.
 | PostgreSQL  | 5432   | BD para metadata MLflow + datos raw + datos procesados |
 | MinIO       | 9000   | API S3 — almacenamiento de artefactos |
 | MinIO UI    | 9001   | Consola web de administración |
-| MLflow      | 5000   | Tracking server + Model Registry |
+| MLflow      | 5001   | Tracking server + Model Registry |
 | JupyterLab  | 8888   | Entorno de experimentación |
 | FastAPI     | 8000   | API de inferencia |
 
@@ -115,7 +115,7 @@ notebooks/penguins_mlflow.ipynb
 ### 4. Ver experimentos en MLflow
 
 ```
-http://localhost:5000
+http://localhost:5001
 ```
 
 ### 5. Ver artefactos en MinIO
