@@ -136,6 +136,12 @@ http://localhost:8000/docs
 
 ## Uso de la API
 
+### Recargar modelo (sin reiniciar)
+
+```bash
+curl -X POST http://localhost:8000/model/reload
+```
+
 ### Predicción individual
 
 ```bash
@@ -191,12 +197,6 @@ curl http://localhost:8000/model/info
 
 ```bash
 curl "http://localhost:8000/predictions?limit=10"
-```
-
-### Recargar modelo (sin reiniciar)
-
-```bash
-curl -X POST http://localhost:8000/model/reload
 ```
 
 ---
