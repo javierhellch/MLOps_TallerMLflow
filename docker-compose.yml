@@ -1,10 +1,5 @@
 version: "3.9"
 
-# ============================================================
-#  MLOps Penguins — docker-compose.yml
-#  Servicios: PostgreSQL · MinIO · MLflow · JupyterLab · API
-# ============================================================
-
 networks:
   mlops-net:
     driver: bridge
@@ -65,7 +60,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # Crea el bucket automáticamente al levantar
+  # Crea el bucket automáticamente al ejecutar
   minio-init:
     image: minio/mc:latest
     container_name: mlops-minio-init
