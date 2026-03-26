@@ -155,6 +155,17 @@ notebooks/penguins_mlflow.ipynb
 http://localhost:5001
 ```
 
+#### Runs
+![Runs](imagenes/MLFlow_Runs.png)
+
+#### Metrics
+![Metric 1](imagenes/MLFlow_Metrics_1.png)
+![Metric 2](imagenes/MLFlow_Metrics_2.png)
+![Metric 3](imagenes/MLFlow_Metrics_3.png)
+
+#### Model
+![Model](imagenes/MLFlow_model.png)
+
 ### 5. Ver artefactos en MinIO
 
 ```
@@ -169,9 +180,24 @@ contraseña: minioadmin123
 http://localhost:8000/docs
 ```
 
+#### Artefactos
+![Artefactos 1](imagenes/MINIO_Artifacts_1.png)
+![Artefactos 2](imagenes/MINIO_Artifacts_2.png)
+
 ---
 
 ## Uso de la API
+
+![API 1](imagenes/API_1.png)
+![API 2](imagenes/API_2.png)
+![API 3](imagenes/API_3.png)
+![API 4](imagenes/API_4.png)
+![API 5](imagenes/API_5.png)
+![API 6](imagenes/API_6.png)
+![API 7](imagenes/API_7.png)
+![API 8](imagenes/API_8.png)
+![API 9](imagenes/API_9.png)
+![API 10](imagenes/API_10.png)
 
 ### Recargar modelo (sin reiniciar)
 
