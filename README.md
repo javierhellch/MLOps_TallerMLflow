@@ -115,6 +115,40 @@ notebooks/penguins_mlflow.ipynb
 #### Inicio
 ![Inicio](imagenes/Jupyter_Inicio.png)
 
+#### Distribucion de caracteristicas por especie
+![Distibucion](imagenes/eda_distribuciones.png)
+
+#### Guardar datos en PostgreSQL
+![PostgreSQL](imagenes/Jupyter_GuardarPostgres.png)
+
+#### Experimentacion Random Forest
+![RandomForest](imagenes/Jupyter_Random_Forest.png)
+
+#### Experimentacion Gradient Boosting
+![GradientBoosting](imagenes/Jupyter_Gradient_Boosting.png)
+
+#### Experimentacion Logistic Regression
+![LogisticRegression](imagenes/Jupyter_Logistic_Regression.png)
+
+#### Experimentacion SVM
+![SVM](imagenes/Jupyter_SVM.png)
+
+#### Experimentacion KNN
+![KNN](imagenes/Jupyter_KNN.png)
+
+#### Resultados
+![Resultados](imagenes/Jupyter_Resultados.png)
+
+#### Comparacion
+![Comparacion](imagenes/comparacion_runs.png)
+
+#### Resumen
+![Comparacion](imagenes/Jupyter_Resumen_Final.png)
+
+
+
+
+
 ### 4. Ver experimentos en MLflow
 
 ```
