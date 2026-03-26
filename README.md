@@ -112,6 +112,9 @@ Abrir y ejecutar el notebook:
 notebooks/penguins_mlflow.ipynb
 ```
 
+#### Inicio
+![Inicio](imagenes/Jupyter_Inicio.png)
+
 ### 4. Ver experimentos en MLflow
 
 ```
